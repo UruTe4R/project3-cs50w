@@ -171,7 +171,7 @@ function load_mailbox(mailbox) {
         }
         
         // GET email to render
-        console.log(id)
+  
         load_mail(id)
 
         // Closing Eventlistener
@@ -221,7 +221,8 @@ function load_mail(id) {
         infos.append(bold, info)
         emailView.append(infos)
       }
-      emailBody = document.createElement('div')
+      // !!!!!!pre element preserves newlines!!!!!!!!
+      emailBody = document.createElement('pre')
       emailBody.classList.add('email-body')
       emailBody.innerHTML = body
 
@@ -253,16 +254,20 @@ function compose_reply(id) {
   fetch(`emails/${id}`)
   .then(response => response.json())
   .then(email => {
+    const textarea = document.querySelector('textarea')
     const replyTo = email["sender"]
     const subject = email["subject"].slice(0, 2) === 'Re' ? email["subject"] : `Re: ${email["subject"]}`
-    const body = `On ${email["timestamp"]} ${email["sender"]} wrote: \n${email["body"]} \n
-    >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n`
-
-    document.querySelector('textarea').focus()
+    const prefix = `\n\nOn ${email["timestamp"]} ${email["sender"]} wrote:`
+    const body = `${prefix} \n${email["body"]}`
+    
     // Clear out composition fields
     document.querySelector('#compose-recipients').value = replyTo;
     document.querySelector('#compose-subject').value = subject;
     document.querySelector('#compose-body').value = body;
+
+    textarea.focus()
+    console.log('prefix.length:', prefix.length)
+    textarea.setSelectionRange(0, 0)
   })
 
   
