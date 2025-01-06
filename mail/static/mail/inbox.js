@@ -31,6 +31,9 @@ document.addEventListener('DOMContentLoaded', function() {
       if (result.message === 'Email sent successfully.') {
         load_mailbox('sent')
       }
+      if (result.error) {
+        console.log(result.error)
+      }
 
     })
     .catch(error => {
@@ -39,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   
 
-
+// closing parenthesis
 });
 
 function compose_email() {
@@ -62,4 +65,117 @@ function load_mailbox(mailbox) {
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
+	
+	// Get emails based on mailbox name
+  fetch(`/emails/${mailbox}`)
+  .then(response => response.json())
+  .then(emails => {
+    emails.forEach(email => {
+      const id = email["id"]
+      const sender = email["sender"]
+			const recipients = email["recipients"]
+			const subject = email["subject"]
+			const body = email["body"]
+			const timestamp = email["timestamp"]
+
+
+			// Create container, then add subject, sender, timestamp
+			const container = document.createElement('div')
+			container.classList.add('email-container')
+
+      // Read Status changes the background color
+      if (email["read"] === true) {
+        container.style.backgroundColor = "lightgray"
+      } else {
+        container.style.backgroundColor = "white"
+      }
+
+			const emailSubject = document.createElement('div')
+			emailSubject.classList.add('email-subject')
+			emailSubject.innerHTML = subject
+
+			const emailSender = document.createElement('div')
+			emailSender.classList.add('email-sender')
+			emailSender.innerHTML = sender
+			
+			const emailTimestamp = document.createElement('div')
+			emailTimestamp.classList.add('email-timestamp')
+			emailTimestamp.innerHTML = timestamp
+
+			container.append(emailSender, emailSubject, emailTimestamp)
+			document.querySelector('#emails-view').append(container)
+
+      
+      // Click event to container
+			container.addEventListener('click', () => {
+        
+        // Toggle read status
+        if (!email["read"]) {
+          fetch(`emails/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+              read: true
+            })
+          })
+          .then(response => response.json())
+          .then(result => {
+            console.log(result)
+          })
+          .catch(error => {
+            console.log(error)
+          })
+ 
+        }
+        
+        // GET email to render
+        fetch(`emails/${id}`)
+        .then(response => response.json())
+        .then(email => {
+          const sender = email["sender"]
+          const recipients = email["recipients"]
+          const subject =  email["subject"]
+          const timestamp = email["timestamp"]
+          const body = email["body"]
+
+          const emailsView = document.querySelector("#emails-view")
+          // Reset emails-view
+          emailsView.innerHTML = ''
+
+          // header.email-header>(div.infos>div.bold+div.info)*4+div.email-body
+          const header = document.createElement('header')
+          header.classList.add('email-header')
+          emailsView.append(header)
+          
+          const boldTexts = ['From', 'To', 'Subject', 'Timestamp']
+          const emailInfos = [sender, recipients, subject, timestamp]
+          for (let i = 0; i < 4; i++) {
+            const infos = document.createElement('div')
+            infos.classList.add('infos')
+            const bold = document.createElement('div')
+            bold.classList.add('bold')
+            bold.innerHTML = `${boldTexts[i]}`
+            const info = document.createElement('div')
+            info.classList.add('info')
+            info.innerHTML = `${emailInfos[i]}`
+            infos.append(bold, info)
+            emailsView.append(infos)
+          }
+          emailBody = document.createElement('div')
+          emailBody.classList.add('email-body')
+          emailBody.innerHTML = body
+          emailsView.append(emailBody)
+        })
+        .catch(error => {
+          console.log(error)
+        })
+
+        // Closing Eventlistener
+			})
+
+      
+    })
+  })
+  .catch(error => {
+    console.log(error)
+  })
 }
