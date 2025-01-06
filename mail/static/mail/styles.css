@@ -2,7 +2,7 @@ textarea {
     min-height: 400px;
 }
 
-/* email container */
+/* emails' containers */
 .email-container {
     padding: 0px 10px;
     margin: 10px 0px;
@@ -38,4 +38,29 @@ textarea {
     display: flex;
     justify-content: flex-end;
     color: rgba(0, 0, 0, 0.5);
+    margin-right: 10px;
+}
+
+/* email view */
+
+.email-header {
+    display: flex;
+    flex-direction: column;
+}
+
+.infos {
+    display: flex;
+    flex-direction: row;
+    margin: 5px 0px;
+}
+
+.bold {
+    font-weight: bold;
+    margin-right: 2px;
+}
+
+
+
+.info {
+
 }

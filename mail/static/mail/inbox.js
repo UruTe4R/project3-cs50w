@@ -45,11 +45,14 @@ document.addEventListener('DOMContentLoaded', function() {
 // closing parenthesis
 });
 
+
+
 function compose_email() {
 
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
+  document.querySelector('#email-view').innerHTML = '';
 
   // Clear out composition fields
   document.querySelector('#compose-recipients').value = '';
@@ -57,11 +60,14 @@ function compose_email() {
   document.querySelector('#compose-body').value = '';
 }
 
+
+
 function load_mailbox(mailbox) {
   
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
+  document.querySelector('#email-view').innerHTML = '';
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
@@ -77,7 +83,6 @@ function load_mailbox(mailbox) {
 			const subject = email["subject"]
 			const body = email["body"]
 			const timestamp = email["timestamp"]
-
 
 			// Create container, then add subject, sender, timestamp
 			const container = document.createElement('div')
@@ -102,11 +107,42 @@ function load_mailbox(mailbox) {
 			emailTimestamp.classList.add('email-timestamp')
 			emailTimestamp.innerHTML = timestamp
 
-			container.append(emailSender, emailSubject, emailTimestamp)
-			document.querySelector('#emails-view').append(container)
+      container.append(emailSubject, emailSender, emailTimestamp)
+      document.querySelector('#emails-view').append(container)
+
+      // Create Archive button w/ event listener
+      const archiveButton = document.createElement('button')
+      archiveButton.classList.add('btn', 'btn-sm', 'btn-primary')
+
+      const archiveState = email["archived"] ? 'Unarchive' : 'Archive'
+      archiveButton.innerHTML = archiveState
+      archiveButton.addEventListener('click', (e) => {
+        e.stopPropagation()
+        fetch(`emails/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            archived: !email["archived"]
+          })
+        })
+        .then(response => {
+          if (response.status === 204) {
+            console.log("Email archived.")
+          }
+        })
+        .catch(error => {
+          console.log('Error:', error)
+        })
+        .finally(() => {
+          load_mailbox('inbox');
+        });
+      });
+      
+			container.append(emailSender, emailSubject, emailTimestamp, archiveButton)
+      container.append(archiveButton)
+      
 
       
-      // Click event to container
+      // Add click event to container
 			container.addEventListener('click', () => {
         
         // Toggle read status
@@ -117,57 +153,21 @@ function load_mailbox(mailbox) {
               read: true
             })
           })
-          .then(response => response.json())
-          .then(result => {
-            console.log(result)
+          .then(response => {
+            // PUT does not return JSON body
+            if (response.status === 204) {
+              console.log("Email read status = true.");
+            } 
           })
           .catch(error => {
-            console.log(error)
+            console.log('Error:', error);
           })
- 
+          
         }
         
         // GET email to render
-        fetch(`emails/${id}`)
-        .then(response => response.json())
-        .then(email => {
-          const sender = email["sender"]
-          const recipients = email["recipients"]
-          const subject =  email["subject"]
-          const timestamp = email["timestamp"]
-          const body = email["body"]
-
-          const emailsView = document.querySelector("#emails-view")
-          // Reset emails-view
-          emailsView.innerHTML = ''
-
-          // header.email-header>(div.infos>div.bold+div.info)*4+div.email-body
-          const header = document.createElement('header')
-          header.classList.add('email-header')
-          emailsView.append(header)
-          
-          const boldTexts = ['From', 'To', 'Subject', 'Timestamp']
-          const emailInfos = [sender, recipients, subject, timestamp]
-          for (let i = 0; i < 4; i++) {
-            const infos = document.createElement('div')
-            infos.classList.add('infos')
-            const bold = document.createElement('div')
-            bold.classList.add('bold')
-            bold.innerHTML = `${boldTexts[i]}`
-            const info = document.createElement('div')
-            info.classList.add('info')
-            info.innerHTML = `${emailInfos[i]}`
-            infos.append(bold, info)
-            emailsView.append(infos)
-          }
-          emailBody = document.createElement('div')
-          emailBody.classList.add('email-body')
-          emailBody.innerHTML = body
-          emailsView.append(emailBody)
-        })
-        .catch(error => {
-          console.log(error)
-        })
+        console.log(id)
+        load_mail(id)
 
         // Closing Eventlistener
 			})
@@ -178,4 +178,69 @@ function load_mailbox(mailbox) {
   .catch(error => {
     console.log(error)
   })
+
+
+  // Change button 
+  if (mailbox === 'sent') {
+
+  }
+  else if (mailbox === 'archive') {
+
+  }
+}
+
+function load_mail(id) {
+  fetch(`emails/${id}`)
+    .then(response => response.json())
+    .then(email => {
+      const sender = email["sender"]
+      const recipients = email["recipients"]
+      const subject =  email["subject"]
+      const timestamp = email["timestamp"]
+      const body = email["body"]
+
+      const emailView = document.querySelector("#email-view")
+      // Reset emails-view and email-view
+      emailView.innerHTML = ''
+      document.querySelector('#emails-view').style.display = 'none';
+
+      // header.email-header>(div.infos>div.bold+div.info)*4+div.email-body
+      const header = document.createElement('header')
+      header.classList.add('email-header')
+      emailView.append(header)
+      
+      const boldTexts = ['From:', 'To:', 'Subject:', 'Timestamp:']
+      const emailInfos = [sender, recipients, subject, timestamp]
+      for (let i = 0; i < 4; i++) {
+        const infos = document.createElement('div')
+        infos.classList.add('infos')
+        const bold = document.createElement('div')
+        bold.classList.add('bold')
+        bold.innerHTML = `${boldTexts[i]}`
+        const info = document.createElement('div')
+        info.classList.add('info')
+        info.innerHTML = `${emailInfos[i]}`
+        infos.append(bold, info)
+        emailView.append(infos)
+      }
+      emailBody = document.createElement('div')
+      emailBody.classList.add('email-body')
+      emailBody.innerHTML = body
+
+      // Add Reply button
+      const replyButton = document.createElement('input')
+      replyButton.type = 'button'
+      replyButton.value = 'Reply'
+      replyButton.classList.add('btn', 'btn-sm', 'btn-outline-primary')
+
+      // Add eventListener to reply button
+      // replyButton.addEventListener('click', {
+
+      // })
+
+      emailView.append(replyButton, document.createElement('hr'), emailBody)
+    })
+    .catch(error => {
+      console.log(error)
+    })
 }
