@@ -94,6 +94,9 @@ function load_mailbox(mailbox) {
       } else {
         container.style.backgroundColor = "white"
       }
+      if (mailbox === 'sent') {
+        container.style.backgroundColor = "white"
+      }
 
 			const emailSubject = document.createElement('div')
 			emailSubject.classList.add('email-subject')
@@ -137,8 +140,10 @@ function load_mailbox(mailbox) {
         });
       });
       
-			container.append(emailSender, emailSubject, emailTimestamp, archiveButton)
-      container.append(archiveButton)
+			container.append(emailSender, emailSubject, emailTimestamp)
+      if (mailbox !== 'sent') {
+        container.append(archiveButton)
+      }
       
 
       
@@ -179,14 +184,6 @@ function load_mailbox(mailbox) {
     console.log(error)
   })
 
-
-  // Change button 
-  if (mailbox === 'sent') {
-
-  }
-  else if (mailbox === 'archive') {
-
-  }
 }
 
 function load_mail(id) {
@@ -258,7 +255,10 @@ function compose_reply(id) {
   .then(email => {
     const replyTo = email["sender"]
     const subject = email["subject"].slice(0, 2) === 'Re' ? email["subject"] : `Re: ${email["subject"]}`
-    const body = `On ${email["timestamp"]} ${email["sender"]} wrote: ${email["body"]} \n`
+    const body = `On ${email["timestamp"]} ${email["sender"]} wrote: \n${email["body"]} \n
+    >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\n`
+
+    document.querySelector('textarea').focus()
     // Clear out composition fields
     document.querySelector('#compose-recipients').value = replyTo;
     document.querySelector('#compose-subject').value = subject;
