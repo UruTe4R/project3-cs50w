@@ -193,6 +193,7 @@ function load_mail(id) {
   fetch(`emails/${id}`)
     .then(response => response.json())
     .then(email => {
+      const id = email["id"]
       const sender = email["sender"]
       const recipients = email["recipients"]
       const subject =  email["subject"]
@@ -234,13 +235,35 @@ function load_mail(id) {
       replyButton.classList.add('btn', 'btn-sm', 'btn-outline-primary')
 
       // Add eventListener to reply button
-      // replyButton.addEventListener('click', {
-
-      // })
+      replyButton.addEventListener('click', () => {
+        compose_reply(id)
+      })
 
       emailView.append(replyButton, document.createElement('hr'), emailBody)
     })
     .catch(error => {
       console.log(error)
     })
+}
+
+function compose_reply(id) {
+  // Show compose view and hide other views
+  document.querySelector('#emails-view').style.display = 'none';
+  document.querySelector('#compose-view').style.display = 'block';
+  document.querySelector('#email-view').innerHTML = '';
+
+
+  fetch(`emails/${id}`)
+  .then(response => response.json())
+  .then(email => {
+    const replyTo = email["sender"]
+    const subject = email["subject"].slice(0, 2) === 'Re' ? email["subject"] : `Re: ${email["subject"]}`
+    const body = `On ${email["timestamp"]} ${email["sender"]} wrote: ${email["body"]} \n`
+    // Clear out composition fields
+    document.querySelector('#compose-recipients').value = replyTo;
+    document.querySelector('#compose-subject').value = subject;
+    document.querySelector('#compose-body').value = body;
+  })
+
+  
 }
